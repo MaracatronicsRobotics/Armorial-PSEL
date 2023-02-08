@@ -1,0 +1,27 @@
+name: Build
+on:
+  push:
+    paths-ignore:
+      - 'docs**'
+  pull_request:
+jobs:
+  build-ubuntu:
+    runs-on: ${{ matrix.os }}
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04, ubuntu-22.04 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: "Install dependencies"
+        run: sudo apt-get update && sudo apt-get install build-essential cmake qtbase5-dev qt5-qmake libprotobuf-dev protobuf-compiler libprotoc-dev protobuf-compiler-grpc libgrpc++-dev libgrpc-dev libqt5serialport5-dev google-mock libgmock-dev libgtest-dev libspdlog-dev libfmt-dev && sudo apt-get upgrade
+      - name: "Install Google Test library"
+        run: cd /usr/src/googletest/googletest/ && sudo cmake CMakeLists.txt && sudo make && cd lib && sudo cp *.a /usr/lib
+      - name: "Install Google Mock library"
+        run: cd /usr/src/googletest/googlemock/ && sudo cmake CMakeLists.txt && sudo make && cd lib && sudo cp *.a /usr/lib
+      - name: "Update ldconfig"
+        run: sudo ldconfig
+      - name: "Build Armorial-PSEL"
+        run: mkdir build && cd build && qmake .. && make -j$(nproc)
