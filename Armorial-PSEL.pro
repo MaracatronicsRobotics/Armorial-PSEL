@@ -41,6 +41,7 @@ SOURCES += \
         src/entities/coach/coach.cpp \
         src/entities/player/player.cpp \
         src/entities/vision/vision.cpp \
+        src/entities/worldmap/worldmap.cpp \
         src/utils/types/robotdetectionpacket/robotdetectionpacket.cpp
 
 # Default rules for deployment.
@@ -57,4 +58,5 @@ HEADERS += \
     src/entities/coach/coach.h \
     src/entities/player/player.h \
     src/entities/vision/vision.h \
+    src/entities/worldmap/worldmap.h \
     src/utils/types/robotdetectionpacket/robotdetectionpacket.h
