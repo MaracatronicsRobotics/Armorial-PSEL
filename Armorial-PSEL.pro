@@ -14,7 +14,7 @@ CONFIG -= app_bundle
 QT += core network
 
 DEFINES += QT_DEPRECATED_WARNINGS
-LIBS += -lQt5Core -lprotobuf
+LIBS += -lQt5Core -lprotobuf -lfmt
 
 system(echo "Generating simulation proto headers" && cd include/proto/simulation && protoc --cpp_out=../ *.proto && cd ../../..)
 
@@ -40,7 +40,8 @@ SOURCES += \
         src/entities/actuator/actuator.cpp \
         src/entities/coach/coach.cpp \
         src/entities/player/player.cpp \
-        src/entities/vision/vision.cpp
+        src/entities/vision/vision.cpp \
+        src/utils/types/robotdetectionpacket/robotdetectionpacket.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -55,4 +56,5 @@ HEADERS += \
     src/entities/actuator/actuator.h \
     src/entities/coach/coach.h \
     src/entities/player/player.h \
-    src/entities/vision/vision.h
+    src/entities/vision/vision.h \
+    src/utils/types/robotdetectionpacket/robotdetectionpacket.h
