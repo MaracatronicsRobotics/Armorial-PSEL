@@ -1,4 +1,4 @@
-/***
+﻿/***
  * Maracatronics Robotics
  * Federal University of Pernambuco (UFPE) at Recife
  * http://www.maracatronics.com/
@@ -22,11 +22,85 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <QObject>
+#include <QVector2D>
 
-class Player
+#include <include/proto/packet.pb.h>
+#include <src/utils/types/robotdetectionpacket/robotdetectionpacket.h>
+
+// Constants for Player detection
+constexpr QVector2D OUT_OF_FIELD = QVector2D(std::numeric_limits<float>::max(),
+                                             std::numeric_limits<float>::max());
+constexpr int PACKETS_TILL_MISSING = 60;
+
+/*!
+ * \brief The Player class provides a implementation to manage a robot in the field, providing
+ * from simple getter methods (for position, id, orientation) to the robot control.
+ */
+class Player : public QObject
 {
+    Q_OBJECT
 public:
-    Player();
+    /*!
+     * \brief Player class constructor.
+     * \param isTeamBlue If this player belongs to the team blue.
+     * \param playerId This Player instance id.
+     */
+    Player(const bool& isTeamBlue, const quint8& playerId);
+
+    /*!
+     * \return True if the player is missing from detection and False otherwise.
+     */
+    bool isMissing() const;
+
+    /*!
+     * \return This Player instance object position at the field.
+     */
+    QVector2D getPosition() const;
+
+    /*!
+     * \return This Player instance object orientation at the field.
+     * \note For reference:
+     *             pi/2   pi/4
+     *               |   /
+     *               |  /
+     *               | /
+     *               |/
+     * +- pi ------------------ 0
+     *               |\
+     *               | \
+     *               |  \
+     *               |   \
+     *            -pi/2  -pi/4
+     */
+    float getOrientation() const;
+
+    /*!
+     * \return True if this Player instance belongs to team blue and False otherwise.
+     */
+    bool isTeamBlue() const;
+
+    /*!
+     * \return This Player instance id.
+     */
+    quint8 getPlayerId() const;
+
+private:
+    // Player internal variables
+    QVector2D _position;
+    float _orientation;
+    bool _isTeamBlue;
+    quint8 _playerId;
+
+    // Internal detection management
+    int _missingPackets;
+
+public slots:
+    /*!
+     * \brief Update this Player instance with a given detection packet.
+     * \param robotDetectionPacket The given detection packet.
+     */
+    void updateFromDetection(const RobotDetectionPacket& robotDetectionPacket);
 };
 
 #endif // PLAYER_H

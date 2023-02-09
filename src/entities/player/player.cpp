@@ -21,7 +21,50 @@
 
 #include "player.h"
 
-Player::Player()
-{
+#include <spdlog/spdlog.h>
 
+Player::Player(const bool& isTeamBlue, const quint8& playerId) : _isTeamBlue(isTeamBlue), _playerId(playerId)
+{
+    _position = OUT_OF_FIELD;
+    _orientation = 0.0f;
+    _missingPackets = 0;
+}
+
+bool Player::isMissing() const {
+    return (_position == OUT_OF_FIELD);
+}
+
+QVector2D Player::getPosition() const {
+    return _position;
+}
+
+float Player::getOrientation() const {
+    return _orientation;
+}
+
+bool Player::isTeamBlue() const {
+    return _isTeamBlue;
+}
+
+quint8 Player::getPlayerId() const {
+    return _playerId;
+}
+
+void Player::updateFromDetection(const RobotDetectionPacket& robotDetectionPacket) {
+    if(robotDetectionPacket.isTeamBlue() != this->isTeamBlue()) return;
+
+    // Get robot detection packet and parse
+    fira_message::Robot robotDetectPacket = robotDetectionPacket.getRobotDetectionPacket();
+    if(robotDetectPacket.robot_id() != this->getPlayerId()) {
+        if(++_missingPackets >= PACKETS_TILL_MISSING) {
+            _position = OUT_OF_FIELD;
+            _orientation = 0.0f;
+        }
+        return ;
+    }
+
+    // Update detection
+    _missingPackets = 0;
+    _position = QVector2D(robotDetectPacket.x(), robotDetectPacket.y());
+    _orientation = robotDetectPacket.orientation();
 }
