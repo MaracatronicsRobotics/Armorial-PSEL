@@ -35,7 +35,7 @@ Vision::Vision(const QString& visionAddress, const quint16& visionPort)
     // Connects interface discover timer
     _interfaceDiscoverTimer = new QTimer();
     QObject::connect(_interfaceDiscoverTimer, &QTimer::timeout, this, &Vision::connectToNetwork);
-    _interfaceDiscoverTimer->start(1000);
+    _interfaceDiscoverTimer->start(200);
 }
 
 Vision::~Vision() {
@@ -45,6 +45,10 @@ Vision::~Vision() {
     // Delete timer and socket
     delete _interfaceDiscoverTimer;
     delete _visionSocket;
+}
+
+QHostAddress Vision::getVisionHostAddress() {
+    return _visionHostAddress;
 }
 
 QString Vision::getVisionAddress() const {
@@ -59,9 +63,16 @@ void Vision::receivePackets() {
     // If reached here, the QUdpSocket has received a packet from the network. So, we mark the
     // received any packets variable as true and disconnect the interface discover timer signal.
     if(!_receivedAnyPackets) {
+        // Mark as received packets
         _receivedAnyPackets = true;
         _interfaceDiscoverTimer->disconnect(SIGNAL(timeout()));
         spdlog::info("Received vision packet!");
+
+        // Discover and get host address
+        QList<QNetworkInterface> availableInterfaces = QNetworkInterface::allInterfaces();
+        const QNetworkAddressEntry addrEntry = availableInterfaces.at(_interfaceIndex - 1)
+                                                .addressEntries().constFirst();
+        _visionHostAddress = addrEntry.broadcast();
     }
 
     // Process the pending packets

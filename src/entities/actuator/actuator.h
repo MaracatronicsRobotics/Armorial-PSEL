@@ -22,11 +22,69 @@
 #ifndef ACTUATOR_H
 #define ACTUATOR_H
 
+#include <QMutex>
+#include <QTimer>
+#include <QObject>
+#include <QUdpSocket>
+#include <QNetworkDatagram>
+#include <QNetworkInterface>
 
-class Actuator
+#include <include/proto/packet.pb.h>
+
+#include <src/utils/types/robotcontrolpacket/robotcontrolpacket.h>
+
+#define CONTROL_PACKET_SEND_INTERVAL_MS 16
+
+/*!
+ * \brief The Actuator class provides an interface to control the robots in the simulated
+ * environment.
+ */
+class Actuator : public QObject
 {
+    Q_OBJECT
 public:
-    Actuator();
+    /*!
+     * \brief Actuator class constructor. It receives the host address and port to connect to
+     * it and send packets.
+     * \param simHostAddress
+     * \param simPort
+     */
+    Actuator(const QString& simHostAddress, const quint16& simPort = 20011);
+
+    /*!
+     * \brief Actuator class destructor.
+     */
+    ~Actuator();
+
+private:
+    // Internal network address variables
+    QString _simHostAddress;
+    quint16 _simPort;
+
+    // Socket implementation to send data
+    QUdpSocket *_actuatorSocket;
+    [[nodiscard]] bool connectToNetwork();
+
+    // QTimer implementation for sync
+    QTimer *_actuatorTimer;
+
+    // Control packet data management
+    QList<RobotControlPacket> _controlPackets;
+    QMutex _actuatorMutex;
+
+public slots:
+    /*!
+     * \brief Receive a control packet from a Player signal implementation.
+     * \param robotControlPacket The robot control packet which will be sent.
+     */
+    void receiveControlPacket(const RobotControlPacket& robotControlPacket);
+
+private slots:
+    /*!
+     * \brief Send control packets to network through the socket.
+     * \note This method should be called/connected with the QTimer timeout signal.
+     */
+    void sendControlPacketsToNetwork();
 };
 
 #endif // ACTUATOR_H
