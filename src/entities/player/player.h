@@ -26,6 +26,8 @@
 #include <QVector2D>
 
 #include <include/proto/packet.pb.h>
+
+#include <src/utils/types/robotcontrolpacket/robotcontrolpacket.h>
 #include <src/utils/types/robotdetectionpacket/robotdetectionpacket.h>
 
 // Constants for Player detection
@@ -94,6 +96,13 @@ private:
 
     // Internal detection management
     int _missingPackets;
+
+signals:
+    /*!
+     * \brief Send robot control packet to the Actuator implementation.
+     * \param robotControlPacket The given robot control packet.
+     */
+    void sendControlPacket(const RobotControlPacket& robotControlPacket);
 
 public slots:
     /*!

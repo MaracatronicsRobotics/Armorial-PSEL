@@ -54,6 +54,11 @@ public:
      */
     ~Vision();
 
+    /*!
+     * \return The vision server host address to post actuator connection.
+     */
+    QHostAddress getVisionHostAddress();
+
 protected:
     /*!
      * \return The vision address that was given in the constructor.
@@ -69,6 +74,7 @@ private:
     // Internal network address variables
     QString _visionAddress;
     quint16 _visionPort;
+    QHostAddress _visionHostAddress;
 
     // Socket and timer for data acquisition
     QUdpSocket *_visionSocket;

@@ -23,7 +23,8 @@
 
 #include <spdlog/spdlog.h>
 
-Player::Player(const bool& isTeamBlue, const quint8& playerId) : _isTeamBlue(isTeamBlue), _playerId(playerId)
+Player::Player(const bool& isTeamBlue, const quint8& playerId)
+    : _isTeamBlue(isTeamBlue), _playerId(playerId)
 {
     _position = OUT_OF_FIELD;
     _orientation = 0.0f;
