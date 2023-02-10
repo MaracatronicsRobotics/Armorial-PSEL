@@ -54,11 +54,6 @@ public:
      */
     ~Vision();
 
-    /*!
-     * \return The vision server host address to post actuator connection.
-     */
-    QHostAddress getVisionHostAddress();
-
 protected:
     /*!
      * \return The vision address that was given in the constructor.
@@ -74,7 +69,6 @@ private:
     // Internal network address variables
     QString _visionAddress;
     quint16 _visionPort;
-    QHostAddress _visionHostAddress;
 
     // Socket and timer for data acquisition
     QUdpSocket *_visionSocket;
@@ -102,6 +96,12 @@ signals:
      * \param fieldDetectionPacket The field detection packet which will be sent.
      */
     void sendFieldDetection(const fira_message::Field& fieldDetectionPacket);
+
+    /*!
+     * \brief Send the given host address to further connection with the simulator environment.
+     * \param hostAddress The given host address.
+     */
+    void sendHostAddress(const QHostAddress& hostAddress);
 
 private slots:
     /*!

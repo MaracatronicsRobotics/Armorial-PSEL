@@ -47,10 +47,6 @@ Vision::~Vision() {
     delete _visionSocket;
 }
 
-QHostAddress Vision::getVisionHostAddress() {
-    return _visionHostAddress;
-}
-
 QString Vision::getVisionAddress() const {
     return _visionAddress;
 }
@@ -72,7 +68,7 @@ void Vision::receivePackets() {
         QList<QNetworkInterface> availableInterfaces = QNetworkInterface::allInterfaces();
         const QNetworkAddressEntry addrEntry = availableInterfaces.at(_interfaceIndex - 1)
                                                 .addressEntries().constFirst();
-        _visionHostAddress = addrEntry.broadcast();
+        emit sendHostAddress(addrEntry.broadcast());
     }
 
     // Process the pending packets

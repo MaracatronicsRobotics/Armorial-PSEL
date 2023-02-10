@@ -23,19 +23,11 @@
 
 #include <spdlog/spdlog.h>
 
-Actuator::Actuator(const QString& simHostAddress, const quint16& simPort)
-    : _simHostAddress(simHostAddress), _simPort(simPort)
+Actuator::Actuator(const quint16& simPort)
+    : _simPort(simPort)
 {
-    // Connect to network
-    if(!connectToNetwork()) {
-        spdlog::critical("Could not connect to actuator at address '{}' and port '{}'.",
-                         simHostAddress.toStdString(), simPort);
-        return ;
-    }
-    else {
-        spdlog::info("Connected to actuator at address '{}' and port '{}'.",
-                     simHostAddress.toStdString(), simPort);
-    }
+    // Default set actuator socket to nullptr
+    _actuatorSocket = nullptr;
 
     // Setup timer
     _actuatorTimer = new QTimer();
@@ -52,18 +44,37 @@ Actuator::~Actuator() {
     delete _actuatorSocket;
 }
 
-bool Actuator::connectToNetwork() {
+void Actuator::connectToNetwork(const QHostAddress& simHostAddress) {
     // Create socket
     _actuatorSocket = new QUdpSocket();
+
+    // Set sim host address
+    _simHostAddress = simHostAddress.toString();
 
     // Bind socket
     _actuatorSocket->connectToHost(_simHostAddress, _simPort);
 
-    // Return wait for connected status
-    return _actuatorSocket->waitForConnected();
+    // Wait for connected status
+    if(!_actuatorSocket->waitForConnected()) {
+        spdlog::critical("Could not connect to actuator at address '{}' and port '{}'.",
+                                 _simHostAddress.toStdString(), _simPort);
+    }
+    else {
+        spdlog::info("Connected to actuator at address '{}' and port '{}'.",
+                             _simHostAddress.toStdString(), _simPort);
+    }
 }
 
 void Actuator::sendControlPacketsToNetwork() {
+    // If not have created the socket yet, just discard the control packets
+    if(_actuatorSocket == nullptr) {
+        _actuatorMutex.lock();
+        _controlPackets.clear();
+        _actuatorMutex.unlock();
+
+        return ;
+    }
+
     // Creating packet
     fira_message::sim_to_ref::Packet packet;
 

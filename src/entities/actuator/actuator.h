@@ -44,12 +44,12 @@ class Actuator : public QObject
     Q_OBJECT
 public:
     /*!
-     * \brief Actuator class constructor. It receives the host address and port to connect to
-     * it and send packets.
-     * \param simHostAddress
-     * \param simPort
+     * \brief Actuator class constructor. It receives the host port to connect and send packets.
+     * \param simPort The sim port to connect.
+     * \note The address will be taken from the Vision module, so the network connection will be
+     * made later.
      */
-    Actuator(const QString& simHostAddress, const quint16& simPort = 20011);
+    Actuator(const quint16& simPort = 20011);
 
     /*!
      * \brief Actuator class destructor.
@@ -63,7 +63,6 @@ private:
 
     // Socket implementation to send data
     QUdpSocket *_actuatorSocket;
-    [[nodiscard]] bool connectToNetwork();
 
     // QTimer implementation for sync
     QTimer *_actuatorTimer;
@@ -78,6 +77,12 @@ public slots:
      * \param robotControlPacket The robot control packet which will be sent.
      */
     void receiveControlPacket(const RobotControlPacket& robotControlPacket);
+
+    /*!
+     * \brief Connect to the sim network with the given sim host address
+     * \param simHostAddress The given sim host address.
+     */
+    void connectToNetwork(const QHostAddress& simHostAddress);
 
 private slots:
     /*!
