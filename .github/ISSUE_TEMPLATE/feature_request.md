@@ -7,21 +7,21 @@ assignees: ''
 
 ---
 
-# Is your feature request related to a problem? Please describe.
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+# What is your feature request related to? Please describe.
+A clear and concise description of what this feature request is related to. Ex. I'm always frustrated when [...]
 
 # Describe the solution you'd like
 A clear and concise description of what you want to happen.
 
-# Describe the task workflow for this feature
-| Task | Time required |  Assigned to | Current Status | Finished | 
-|------|-----------------|---------------|-----------------|----------|
-| Refactor to use smartpointers (#id) | 3 days | @user @user2 | Done | :white_check_mark:
-| Creating the best attacker (#id) | 1 week | @user | In progress | :white_large_square:
-| Integration tests | 24 hours | @user | Waiting (#id) | :white_large_square:
+# List the tasks related to this feature
+Here you should list all the tasks related to this feature using check boxes. Remember to create tasks following the Task templates and mark the check boxes when you complete them. 
+- [ ] #id1
+- [ ] #id2
+- [ ] #id3
 
 # Describe alternatives you've considered
 A clear and concise description of any alternative solutions or features you've considered.
 
 # Additional context
 Add any other context or screenshots about the feature request here.
+
