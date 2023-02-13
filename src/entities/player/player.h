@@ -31,9 +31,13 @@
 #include <src/utils/types/robotdetectionpacket/robotdetectionpacket.h>
 
 // Constants for Player detection
-constexpr QVector2D OUT_OF_FIELD = QVector2D(std::numeric_limits<float>::max(),
-                                             std::numeric_limits<float>::max());
-constexpr int PACKETS_TILL_MISSING = 60;
+static constexpr QVector2D OUT_OF_FIELD = QVector2D(std::numeric_limits<float>::max(),
+                                                    std::numeric_limits<float>::max());
+static constexpr int PACKETS_TILL_MISSING = 60;
+static constexpr float KP = 25.0f;
+static constexpr float KI = 0.0f;
+static constexpr float KD = 2.5f;
+static constexpr float BASE_SPEED = 30.0f;
 
 /*!
  * \brief The Player class provides a implementation to manage a robot in the field, providing
@@ -87,6 +91,28 @@ public:
      */
     quint8 getPlayerId() const;
 
+protected:
+    // Mark Coach as a friend class so it can call this methods from Player
+    friend class Coach;
+
+    /*!
+     * \brief Make this Player go to a given target position.
+     * \param targetPosition The given target position.
+     */
+    void goTo(const QVector2D& targetPosition);
+
+    /*!
+     * \brief Make this Player rotate to a given target position.
+     * \param targetPosition The given target position.
+     */
+    void rotateTo(const QVector2D& targetPosition);
+
+    /*!
+     * \brief Make this Player rotate to a given orientation.
+     * \param orientation The given orientation.
+     */
+    void rotateTo(const float& orientation);
+
 private:
     // Player internal variables
     QVector2D _position;
@@ -96,6 +122,10 @@ private:
 
     // Internal detection management
     int _missingPackets;
+
+    // PID
+    float _lastError;
+    float _cumulativeError;
 
 signals:
     /*!
