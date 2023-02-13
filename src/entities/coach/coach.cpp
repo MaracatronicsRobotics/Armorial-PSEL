@@ -21,7 +21,48 @@
 
 #include "coach.h"
 
-Coach::Coach()
+Coach::Coach(const QMap<bool, QList<Player*>>& players, WorldMap* worldMap)
+    : _players(players), _worldMap(worldMap)
 {
+    // Create QTimer and connects to the runCoach() slot
+    _actuatorTimer = new QTimer(this);
+    QObject::connect(_actuatorTimer, &QTimer::timeout, this, &Coach::runCoach);
+    _actuatorTimer->start(COACH_ITERATION_INTERVAL_MS);
+}
 
+std::optional<Player*> Coach::getPlayer(const bool& isTeamBlue, const quint8& playerId) {
+    // Get list of players
+    QList<Player*> playersForColor = _players.value(isTeamBlue);
+
+    // Iterate searching for playerId
+    for(const auto& player : playersForColor) {
+        if(player->getPlayerId() == playerId) {
+            return player;
+        }
+    }
+
+    // If could not found, just return std::nullopt (should trait later)
+    return std::nullopt;
+}
+
+WorldMap* Coach::getWorldMap() {
+    return _worldMap;
+}
+
+void Coach::runCoach() {
+    // Here you can control the robots freely.
+    // Remember that the getPlayer(color, id) function can return a std::nullopt object, so
+    // be careful when you use it (remember to only use ids from 0-2 and the BLUE and YELLOW
+    // defines).
+
+    // Example 1: here we get the ball position and set the BLUE and YELLOW player 0 to follow it
+    QVector2D ballPosition = getWorldMap()->ballPosition();
+    getPlayer(BLUE, 0).value()->goTo(ballPosition);
+    getPlayer(YELLOW, 0).value()->goTo(ballPosition);
+
+    // Example 2: here we set the BLUE and YELLOW players 1 and 2 to rotate to the ball
+    getPlayer(BLUE, 1).value()->rotateTo(ballPosition);
+    getPlayer(BLUE, 2).value()->rotateTo(ballPosition);
+    getPlayer(YELLOW, 1).value()->rotateTo(ballPosition);
+    getPlayer(YELLOW, 2).value()->rotateTo(ballPosition);
 }

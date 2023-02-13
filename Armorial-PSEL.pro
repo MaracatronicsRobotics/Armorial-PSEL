@@ -43,7 +43,8 @@ SOURCES += \
         src/entities/vision/vision.cpp \
         src/entities/worldmap/worldmap.cpp \
         src/utils/types/robotcontrolpacket/robotcontrolpacket.cpp \
-        src/utils/types/robotdetectionpacket/robotdetectionpacket.cpp
+        src/utils/types/robotdetectionpacket/robotdetectionpacket.cpp \
+        src/utils/utils.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -61,4 +62,5 @@ HEADERS += \
     src/entities/vision/vision.h \
     src/entities/worldmap/worldmap.h \
     src/utils/types/robotcontrolpacket/robotcontrolpacket.h \
-    src/utils/types/robotdetectionpacket/robotdetectionpacket.h
+    src/utils/types/robotdetectionpacket/robotdetectionpacket.h \
+    src/utils/utils.h
