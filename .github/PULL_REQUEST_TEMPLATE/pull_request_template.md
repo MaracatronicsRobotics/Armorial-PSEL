@@ -1,12 +1,3 @@
----
-name: Pull request
-about: Create a pull request to the project
-title: ''
-labels: ''
-assignees: ''
-
----
-
 # What is the proposal of this pull request?
 A clear and concise description of the main proposal of this pull request.
 

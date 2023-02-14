@@ -71,7 +71,11 @@ Thumbs.db
 *.dll
 *.exe
 
+# Build folders
 bin/
 build/
+
+# VSCode configs
+.vscode/
 
 
