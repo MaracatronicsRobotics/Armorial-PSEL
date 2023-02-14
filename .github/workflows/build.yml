@@ -12,11 +12,11 @@ jobs:
       matrix:
         os: [ ubuntu-20.04, ubuntu-22.04 ]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: "Install dependencies"
-        run: sudo apt-get update && sudo apt-get install build-essential cmake qtbase5-dev qt5-qmake libprotobuf-dev protobuf-compiler libprotoc-dev protobuf-compiler-grpc libgrpc++-dev libgrpc-dev libqt5serialport5-dev google-mock libgmock-dev libgtest-dev libspdlog-dev libfmt-dev && sudo apt-get upgrade
+        run: sudo apt-get clean && sudo apt-get update && sudo apt-get install build-essential cmake qtbase5-dev qt5-qmake libprotobuf-dev protobuf-compiler libprotoc-dev protobuf-compiler-grpc libgrpc++-dev libgrpc-dev libqt5serialport5-dev google-mock libgmock-dev libgtest-dev libspdlog-dev libfmt-dev
       - name: "Install Google Test library"
         run: cd /usr/src/googletest/googletest/ && sudo cmake CMakeLists.txt && sudo make && cd lib && sudo cp *.a /usr/lib
       - name: "Install Google Mock library"
