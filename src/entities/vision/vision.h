@@ -28,7 +28,6 @@
 #include <QNetworkDatagram>
 #include <QNetworkInterface>
 
-#include <include/proto/packet.pb.h>
 #include <src/utils/types/robotdetectionpacket/robotdetectionpacket.h>
 
 /*!
@@ -46,7 +45,7 @@ public:
      * \param visionAddress The vision network address.
      * \param visionPort The vision network port.
      */
-    Vision(const QString& visionAddress = "224.0.0.1", const quint16& visionPort = 10002);
+    Vision(const QString &visionAddress = "224.5.23.2", const quint16 &visionPort = 10020);
 
     /*!
      * \brief Vision class destructor. It disconnects from the vision network and destroys the
@@ -83,19 +82,19 @@ signals:
      * \brief Send a robot detection packet signal to connected QObjects.
      * \param robotDetectionPacket The robot detection packet which will be sent.
      */
-    void sendRobotDetection(const RobotDetectionPacket& robotDetectionPacket);
+    void sendRobotDetection(const RobotDetectionPacket &robotDetectionPacket);
 
     /*!
      * \brief Send a ball detection packet signal to connected QObjects.
      * \param ballDetectionPacket The ball detection packet which will be sent.
      */
-    void sendBallDetection(const fira_message::Ball& ballDetectionPacket);
+    void sendBallDetection(const SSL_DetectionBall &ballDetectionPacket);
 
     /*!
      * \brief Send a field detection packet signal to connected QObjects.
      * \param fieldDetectionPacket The field detection packet which will be sent.
      */
-    void sendFieldDetection(const fira_message::Field& fieldDetectionPacket);
+    void sendFieldDetection(const SSL_GeometryData &fieldDetectionPacket);
 
     /*!
      * \brief Send the given host address to further connection with the simulator environment.

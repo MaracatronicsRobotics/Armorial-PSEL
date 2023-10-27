@@ -65,4 +65,9 @@ void Coach::runCoach() {
     getPlayer(BLUE, 2).value()->rotateTo(ballPosition);
     getPlayer(YELLOW, 1).value()->rotateTo(ballPosition);
     getPlayer(YELLOW, 2).value()->rotateTo(ballPosition);
+
+    getPlayer(BLUE, 3).value()->dribble(true);
+    getPlayer(YELLOW, 3).value()->dribble(true);
+    getPlayer(BLUE, 2).value()->dribble(true);
+    getPlayer(YELLOW, 2).value()->dribble(true);
 }

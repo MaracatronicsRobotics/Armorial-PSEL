@@ -23,11 +23,13 @@
 
 #include <spdlog/spdlog.h>
 
-Actuator::Actuator(const quint16& simPort)
-    : _simPort(simPort)
+Actuator::Actuator(const quint16 &simBluePort, const quint16 &simYellowPort)
+    : _simBluePort(simBluePort)
+    , _simYellowPort(simYellowPort)
 {
     // Default set actuator socket to nullptr
-    _actuatorSocket = nullptr;
+    _actuatorBlueSocket = nullptr;
+    _actuatorYellowSocket = nullptr;
 
     // Setup timer
     _actuatorTimer = new QTimer();
@@ -37,37 +39,51 @@ Actuator::Actuator(const quint16& simPort)
 
 Actuator::~Actuator() {
     // Disconnect the vision socket from host
-    _actuatorSocket->disconnectFromHost();
+    _actuatorBlueSocket->disconnectFromHost();
+    _actuatorYellowSocket->disconnectFromHost();
 
     // Delete timer and socket
     delete _actuatorTimer;
-    delete _actuatorSocket;
+    delete _actuatorBlueSocket;
+    delete _actuatorYellowSocket;
 }
 
 void Actuator::connectToNetwork(const QHostAddress& simHostAddress) {
     // Create socket
-    _actuatorSocket = new QUdpSocket();
+    _actuatorBlueSocket = new QUdpSocket();
+    _actuatorYellowSocket = new QUdpSocket();
 
     // Set sim host address
     _simHostAddress = simHostAddress.toString();
 
     // Bind socket
-    _actuatorSocket->connectToHost(_simHostAddress, _simPort);
+    _actuatorBlueSocket->connectToHost(_simHostAddress, _simBluePort);
+    _actuatorYellowSocket->connectToHost(_simHostAddress, _simYellowPort);
 
     // Wait for connected status
-    if(!_actuatorSocket->waitForConnected()) {
-        spdlog::critical("Could not connect to actuator at address '{}' and port '{}'.",
-                                 _simHostAddress.toStdString(), _simPort);
+    if (!_actuatorBlueSocket->waitForConnected()) {
+        spdlog::critical("Could not connect to blue actuator at address '{}' and port '{}'.",
+                         _simHostAddress.toStdString(),
+                         _simBluePort);
+    } else {
+        spdlog::info("Connected to blue actuator at address '{}' and port '{}'.",
+                     _simHostAddress.toStdString(),
+                     _simBluePort);
     }
-    else {
-        spdlog::info("Connected to actuator at address '{}' and port '{}'.",
-                             _simHostAddress.toStdString(), _simPort);
+    if (!_actuatorYellowSocket->waitForConnected()) {
+        spdlog::critical("Could not connect to yellow actuator at address '{}' and port '{}'.",
+                         _simHostAddress.toStdString(),
+                         _simYellowPort);
+    } else {
+        spdlog::info("Connected to yellow actuator at address '{}' and port '{}'.",
+                     _simHostAddress.toStdString(),
+                     _simYellowPort);
     }
 }
 
 void Actuator::sendControlPacketsToNetwork() {
     // If not have created the socket yet, just discard the control packets
-    if(_actuatorSocket == nullptr) {
+    if (_actuatorBlueSocket == nullptr || _actuatorYellowSocket == nullptr) {
         _actuatorMutex.lock();
         _controlPackets.clear();
         _actuatorMutex.unlock();
@@ -76,20 +92,49 @@ void Actuator::sendControlPacketsToNetwork() {
     }
 
     // Creating packet
-    fira_message::sim_to_ref::Packet packet;
+    RobotControl bluePacket;
+    RobotControl yellowPacket;
 
     // Locking mutex, reading from control packets and setting commands
     _actuatorMutex.lock();
-    for (const auto& pkt : _controlPackets) {
-        fira_message::sim_to_ref::Command *command = packet.mutable_cmd()->add_robot_commands();
+    for (const auto &pkt : _controlPackets) {
+        if (pkt.isTeamBlue()) {
+            RobotCommand *command = bluePacket.add_robot_commands();
 
-        // Setting macro informations (team and robot id)
-        command->set_id(pkt.getPlayerId());
-        command->set_yellowteam(!pkt.isTeamBlue());
+            // Setting macro informations (team and robot id)
+            command->set_id(pkt.getPlayerId());
 
-        // Set wheels speed
-        command->set_wheel_left(pkt.getWheelLeft());
-        command->set_wheel_right(pkt.getWheelRight());
+            // Set wheels speed
+            MoveLocalVelocity *localVel = command->mutable_move_command()->mutable_local_velocity();
+            localVel->set_forward(pkt.forwardSpeed());
+            localVel->set_left(pkt.leftSpeed());
+            localVel->set_angular(pkt.angularSpeed());
+
+            // Set kick parameters
+            command->set_kick_speed(pkt.kickSpeed());
+            command->set_kick_angle(pkt.chipKick());
+
+            // Set dribble parameters
+            command->set_dribbler_speed(pkt.dribblerSpeed());
+        } else {
+            RobotCommand *command = yellowPacket.add_robot_commands();
+
+            // Setting macro informations (team and robot id)
+            command->set_id(pkt.getPlayerId());
+
+            // Set wheels speed
+            MoveLocalVelocity *localVel = command->mutable_move_command()->mutable_local_velocity();
+            localVel->set_forward(pkt.forwardSpeed());
+            localVel->set_left(pkt.leftSpeed());
+            localVel->set_angular(pkt.angularSpeed());
+
+            // Set kick parameters
+            command->set_kick_speed(pkt.kickSpeed());
+            command->set_kick_angle(pkt.chipKick());
+
+            // Set dribble parameters
+            command->set_dribbler_speed(pkt.dribblerSpeed());
+        }
     }
 
     // Clear packets
@@ -99,14 +144,22 @@ void Actuator::sendControlPacketsToNetwork() {
     _actuatorMutex.unlock();
 
     // Parse to datagram
-    QByteArray buffer(packet.ByteSizeLong(), 0);
-    packet.SerializeToArray(buffer.data(), buffer.size());
-    QNetworkDatagram datagram(buffer);
+    QByteArray blueBuffer(bluePacket.ByteSizeLong(), 0);
+    bluePacket.SerializeToArray(blueBuffer.data(), blueBuffer.size());
+    QNetworkDatagram blueDatagram(blueBuffer);
+
+    QByteArray yellowBuffer(yellowPacket.ByteSizeLong(), 0);
+    yellowPacket.SerializeToArray(yellowBuffer.data(), yellowBuffer.size());
+    QNetworkDatagram yellowDatagram(yellowBuffer);
 
     // Try to send data to simulator
-    bool sentDatagram = (_actuatorSocket->writeDatagram(datagram) != -1);
-    if(!sentDatagram) {
-        spdlog::warn("Failed to sent datagram to simulator. Is simulator running?");
+    bool sentBlueDatagram = (_actuatorBlueSocket->writeDatagram(blueDatagram) != -1);
+    bool sentYellowDatagram = (_actuatorYellowSocket->writeDatagram(yellowDatagram) != -1);
+    if (!sentBlueDatagram) {
+        spdlog::warn("Failed to sent blue datagram to simulator. Is simulator running?");
+    }
+    if (!sentYellowDatagram) {
+        spdlog::warn("Failed to sent yellow datagram to simulator. Is simulator running?");
     }
 }
 

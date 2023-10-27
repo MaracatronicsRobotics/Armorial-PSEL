@@ -32,6 +32,7 @@ Player::Player(const bool& isTeamBlue, const quint8& playerId)
     _missingPackets = 0;
     _lastError = 0.0f;
     _cumulativeError = 0.0f;
+    _controlPacket = new RobotControlPacket(isTeamBlue, playerId, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 bool Player::isMissing() const {
@@ -54,113 +55,134 @@ quint8 Player::getPlayerId() const {
     return _playerId;
 }
 
-void Player::goTo(const QVector2D &targetPosition) {
-    // Define speed and reverse vars
-    float rightMotorSpeed;
-    float leftMotorSpeed;
-    bool reversed = false;
-
-    // Get normalized robot angle and angle to target
-    float robotAngle = Utils::normalizeAngle(getOrientation());
-    float angleToTarget = Utils::getAngle(this->getPosition(), targetPosition);
-
-    // Check if front of robot can be reversed
-    if(Utils::checkIfCanBeReversed(robotAngle, angleToTarget)) {
-        // Reverse the front of the robot
-        reversed = true;
-        robotAngle = Utils::normalizeAngle(robotAngle + M_PI);
+float normalize(const float &angle)
+{
+    float _angle = angle;
+    while (_angle > M_PI) {
+        _angle -= 2 * M_PI;
+    }
+    while (_angle < -M_PI) {
+        _angle += 2 * M_PI;
     }
 
-    // Calculate error
-    float angError = Utils::smallestAngleDiff(robotAngle, angleToTarget);
-
-    // Get PID output and update error
-    float motorSpeed = (KP * angError) + (KI * _cumulativeError) + (KD * (angError - _lastError));
-    _lastError = angError;
-    _cumulativeError += angError;
-
-    // Normalize
-    motorSpeed = motorSpeed > BASE_SPEED ? BASE_SPEED : motorSpeed;
-    motorSpeed = motorSpeed < -BASE_SPEED ? -BASE_SPEED : motorSpeed;
-
-    if (!reversed) {
-        if (motorSpeed > 0) {
-            leftMotorSpeed = BASE_SPEED ;
-            rightMotorSpeed = BASE_SPEED - motorSpeed;
-        } else {
-            leftMotorSpeed = BASE_SPEED + motorSpeed;
-            rightMotorSpeed = BASE_SPEED;
-        }
-    } else {
-        if (motorSpeed > 0) {
-            leftMotorSpeed = -BASE_SPEED + motorSpeed;
-            rightMotorSpeed = -BASE_SPEED ;
-        } else {
-            leftMotorSpeed = -BASE_SPEED ;
-            rightMotorSpeed = -BASE_SPEED - motorSpeed;
-        }
-    }
-
-    emit sendControlPacket(RobotControlPacket(isTeamBlue(), getPlayerId(),
-                                              leftMotorSpeed, rightMotorSpeed));
+    return _angle;
 }
 
-void Player::rotateTo(const QVector2D &targetPosition) {
-    this->rotateTo(Utils::getAngle(this->getPosition(), targetPosition));
+void Player::goTo(const QVector2D &targetPosition)
+{
+    QVector2D error = targetPosition - this->getPosition();
+    QVector2D desiredVelocity = error * LINEAR_KP;
+
+    const QVector2D robotYVector(cos(this->getOrientation()), sin(this->getOrientation()));
+    const float c = cos(-M_PI / 2);
+    const float s = sin(-M_PI / 2);
+    const QVector2D robotXVector = QVector2D(robotYVector.x() * c - robotYVector.y() * s,
+                                             robotYVector.x() * s + robotYVector.y() * c);
+
+    const float angleX = normalize(acos(QVector2D::dotProduct(robotXVector, desiredVelocity)
+                                        / (robotXVector.length() * desiredVelocity.length())));
+    const float angleY = normalize(acos(QVector2D::dotProduct(robotYVector, desiredVelocity)
+                                        / (robotYVector.length() * desiredVelocity.length())));
+
+    if (isnanf(angleX) || isnanf(angleY)) {
+        return;
+    }
+
+    QVector2D decomposedVel(desiredVelocity.length() * cos(angleX),
+                            desiredVelocity.length() * cos(angleY));
+
+    if (decomposedVel.length() > MAX_SPEED) {
+        decomposedVel = decomposedVel.normalized() * MAX_SPEED;
+    }
+
+    _controlMutex.lock();
+    _controlPacket->setForwardSpeed(decomposedVel.y());
+    _controlPacket->setLeftSpeed(-decomposedVel.x());
+    _controlMutex.unlock();
+
+    emit sendControlPacket(*_controlPacket);
 }
 
-void Player::rotateTo(const float &orientation) {
-    // Define speed and reverse vars
-    float rightMotorSpeed;
-    float leftMotorSpeed;
-    bool reversed = false;
+void Player::rotateTo(const QVector2D &targetPosition)
+{
+    QVector2D distToTarget = targetPosition - this->getPosition();
 
-    // Get normalized robot angle and angle to target
-    float robotAngle = Utils::normalizeAngle(getOrientation());
+    float playerAngle = this->getOrientation();
+    float targetAngle = atan2(distToTarget.y(), distToTarget.x());
 
-    // Check if front of robot can be reversed
-    if(Utils::checkIfCanBeReversed(robotAngle, orientation)) {
-        // Reverse the front of the robot
-        reversed = true;
-        robotAngle = Utils::normalizeAngle(robotAngle + M_PI);
+    float angleDelta = targetAngle - playerAngle;
+
+    if (abs(angleDelta) > M_PI) {
+        if (targetAngle < playerAngle) {
+            angleDelta += 2 * M_PI;
+        } else {
+            angleDelta -= 2 * M_PI;
+        }
     }
 
-    // Calculate error
-    float angError = Utils::smallestAngleDiff(robotAngle, orientation);
+    _controlMutex.lock();
+    _controlPacket->setAngularSpeed(angleDelta * ANGULAR_KP);
+    _controlMutex.unlock();
 
-    // Get PID output and update error
-    float motorSpeed = (KP * angError) + (KI * _cumulativeError) + (KD * (angError - _lastError));
-    _lastError = angError;
-    _cumulativeError += angError;
+    emit sendControlPacket(*_controlPacket);
+}
 
-    // The standard movement of the robots will be a clockwise rotation
-    leftMotorSpeed = motorSpeed ;
-    rightMotorSpeed = -motorSpeed;
-
-    if (reversed) {
-        leftMotorSpeed = -motorSpeed ;
-        rightMotorSpeed = motorSpeed;
+void Player::kick(const float kickSpeed, bool isChipped)
+{
+    float chipAngle = 0.0f;
+    if (isChipped) {
+        chipAngle = M_PI_4;
     }
 
-    emit sendControlPacket(RobotControlPacket(isTeamBlue(), getPlayerId(),
-                                              leftMotorSpeed, rightMotorSpeed));
+    _controlMutex.lock();
+    _controlPacket->setKickSpeed(kickSpeed);
+    _controlPacket->setChipKickAngle(chipAngle);
+    _controlMutex.unlock();
+
+    emit sendControlPacket(*_controlPacket);
+}
+
+void Player::dribble(const bool enable)
+{
+    float dribbleSpeed = 0.0f;
+    if (enable) {
+        dribbleSpeed = DRIBBLE_SPEED;
+    }
+
+    _controlMutex.lock();
+    _controlPacket->setDribblerSpeed(dribbleSpeed);
+    _controlMutex.unlock();
+
+    emit sendControlPacket(*_controlPacket);
 }
 
 void Player::updateFromDetection(const RobotDetectionPacket& robotDetectionPacket) {
     if(robotDetectionPacket.isTeamBlue() != this->isTeamBlue()) return;
 
     // Get robot detection packet and parse
-    fira_message::Robot robotDetectPacket = robotDetectionPacket.getRobotDetectionPacket();
-    if(robotDetectPacket.robot_id() != this->getPlayerId()) {
-        if(++_missingPackets >= PACKETS_TILL_MISSING) {
+    SSL_DetectionRobot robotDetectPacket = robotDetectionPacket.getRobotDetectionPacket();
+    if (robotDetectPacket.robot_id() != this->getPlayerId()) {
+        if (++_missingPackets >= PACKETS_TILL_MISSING) {
             _position = OUT_OF_FIELD;
             _orientation = 0.0f;
         }
-        return ;
+        return;
     }
 
     // Update detection
     _missingPackets = 0;
-    _position = QVector2D(robotDetectPacket.x(), robotDetectPacket.y());
+    _position = QVector2D(robotDetectPacket.x() / 1000.0f, robotDetectPacket.y() / 1000.0f);
     _orientation = robotDetectPacket.orientation();
+
+    _controlMutex.lock();
+    delete _controlPacket;
+    _controlPacket = new RobotControlPacket(this->isTeamBlue(),
+                                            this->getPlayerId(),
+                                            0.0f,
+                                            0.0f,
+                                            0.0f,
+                                            0.0f,
+                                            0.0f,
+                                            0.0f);
+    _controlMutex.unlock();
 }

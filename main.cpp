@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     QMap<bool, QList<Player*>> _players;
     for(int i = 0; i <= 1; i++) {
         _players.insert(i, QList<Player*>());
-        for(int j = 0; j < 3; j++) {
+        for (int j = 0; j < 6; j++) {
             _players[i].push_back(new Player(i, j));
             QObject::connect(vision, &Vision::sendRobotDetection, _players[i][j], &Player::updateFromDetection);
             QObject::connect(_players[i][j], &Player::sendControlPacket, actuator, &Actuator::receiveControlPacket);

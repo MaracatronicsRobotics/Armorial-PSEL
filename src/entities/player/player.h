@@ -22,10 +22,9 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <QMutex>
 #include <QObject>
 #include <QVector2D>
-
-#include <include/proto/packet.pb.h>
 
 #include <src/utils/types/robotcontrolpacket/robotcontrolpacket.h>
 #include <src/utils/types/robotdetectionpacket/robotdetectionpacket.h>
@@ -34,10 +33,10 @@
 static constexpr QVector2D OUT_OF_FIELD = QVector2D(std::numeric_limits<float>::max(),
                                                     std::numeric_limits<float>::max());
 static constexpr int PACKETS_TILL_MISSING = 60;
-static constexpr float KP = 25.0f;
-static constexpr float KI = 0.0f;
-static constexpr float KD = 2.5f;
-static constexpr float BASE_SPEED = 30.0f;
+static constexpr float LINEAR_KP = 3.0f;
+static constexpr float ANGULAR_KP = 5.0f;
+static constexpr float MAX_SPEED = 2.5f;
+static constexpr float DRIBBLE_SPEED = 50.0f;
 
 /*!
  * \brief The Player class provides a implementation to manage a robot in the field, providing
@@ -105,13 +104,20 @@ protected:
      * \brief Make this Player rotate to a given target position.
      * \param targetPosition The given target position.
      */
-    void rotateTo(const QVector2D& targetPosition);
+    void rotateTo(const QVector2D &targetPosition);
 
     /*!
-     * \brief Make this Player rotate to a given orientation.
-     * \param orientation The given orientation.
+     * \brief Make this Player kick the ball with certain speed.
+     * \param kickSpeed The given speed of the kick.
+     * \param isChipped True if the kick is chipped, false otherwise.
      */
-    void rotateTo(const float& orientation);
+    void kick(const float kickSpeed, bool isChipped);
+
+    /*!
+     * \brief Turns dribble on/off.
+     * \param enable True to turn dribble on, false otherwise.
+     */
+    void dribble(const bool enable);
 
 private:
     // Player internal variables
@@ -119,6 +125,10 @@ private:
     float _orientation;
     bool _isTeamBlue;
     quint8 _playerId;
+
+    // Control management
+    RobotControlPacket *_controlPacket;
+    QMutex _controlMutex;
 
     // Internal detection management
     int _missingPackets;

@@ -48,19 +48,19 @@ float WorldMap::maxY() const {
 }
 
 float WorldMap::length() const {
-    return _field.length();
+    return _field.field().field_length() / 1000.0f;
 }
 
 float WorldMap::width() const {
-    return _field.width();
+    return _field.field().field_width() / 1000.0f;
 }
 
 float WorldMap::goalDepth() const {
-    return _field.goal_depth();
+    return _field.field().goal_depth() / 1000.0f;
 }
 
 float WorldMap::goalWidth() const {
-    return _field.goal_width();
+    return _field.field().goal_width() / 1000.0f;
 }
 
 float WorldMap::penaltyDepth() const {
@@ -131,13 +131,15 @@ QVector2D WorldMap::theirPenaltyMark() const {
 }
 
 QVector2D WorldMap::ballPosition() const {
-    return QVector2D(_ball.x(), _ball.y());
+    return QVector2D(_ball.x() / 1000.0f, _ball.y() / 1000.0f);
 }
 
-void WorldMap::updateBallDetection(const fira_message::Ball& ball) {
+void WorldMap::updateBallDetection(const SSL_DetectionBall &ball)
+{
     _ball = ball;
 }
 
-void WorldMap::updateFieldDetection(const fira_message::Field& field) {
+void WorldMap::updateFieldDetection(const SSL_GeometryData &field)
+{
     _field = field;
 }

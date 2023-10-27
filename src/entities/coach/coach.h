@@ -30,6 +30,8 @@
 #include <src/entities/player/player.h>
 #include <src/entities/worldmap/worldmap.h>
 
+#include <spdlog/spdlog.h>
+
 #define COACH_ITERATION_INTERVAL_MS 16
 #define YELLOW false
 #define BLUE true

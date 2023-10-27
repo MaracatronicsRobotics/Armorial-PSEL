@@ -22,9 +22,12 @@
 
 #include "robotdetectionpacket.h"
 
-RobotDetectionPacket::RobotDetectionPacket(const bool& isTeamBlue,
-                                           const fira_message::Robot& robotDetectionPacket)
-    : _isTeamBlue(isTeamBlue), _robotDetectionPacket(robotDetectionPacket)
+#include <include/proto/ssl_vision_wrapper.pb.h>
+
+RobotDetectionPacket::RobotDetectionPacket(const bool &isTeamBlue,
+                                           const SSL_DetectionRobot &robotDetectionPacket)
+    : _isTeamBlue(isTeamBlue)
+    , _robotDetectionPacket(robotDetectionPacket)
 {
 
 }
@@ -33,6 +36,7 @@ bool RobotDetectionPacket::isTeamBlue() const {
     return _isTeamBlue;
 }
 
-fira_message::Robot RobotDetectionPacket::getRobotDetectionPacket() const {
+SSL_DetectionRobot RobotDetectionPacket::getRobotDetectionPacket() const
+{
     return _robotDetectionPacket;
 }

@@ -26,7 +26,7 @@
 #include <QObject>
 #include <QMap>
 
-#include <include/proto/packet.pb.h>
+#include <include/proto/ssl_vision_wrapper.pb.h>
 
 #include <src/entities/player/player.h>
 
@@ -156,13 +156,13 @@ public:
 
 private:
     // Internal variables
-    fira_message::Field _field;
-    fira_message::Ball _ball;
+    SSL_GeometryData _field;
+    SSL_DetectionBall _ball;
     bool _isPlayingLeft;
 
 public slots:
-    void updateBallDetection(const fira_message::Ball& ball);
-    void updateFieldDetection(const fira_message::Field& field);
+    void updateBallDetection(const SSL_DetectionBall &ball);
+    void updateFieldDetection(const SSL_GeometryData &field);
 };
 
 #endif // WORLDMAP_H

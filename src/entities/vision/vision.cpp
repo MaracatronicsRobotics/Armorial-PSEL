@@ -21,6 +21,7 @@
 
 #include "vision.h"
 
+#include <include/proto/ssl_vision_wrapper.pb.h>
 #include <spdlog/spdlog.h>
 
 Vision::Vision(const QString& visionAddress, const quint16& visionPort)
@@ -80,46 +81,44 @@ void Vision::receivePackets() {
         if(!datagram.isValid()) continue;
 
         // Try to parse to detection packet
-        fira_message::sim_to_ref::Environment wrapperData;
-        if(!wrapperData.ParseFromArray(datagram.data().data(), datagram.data().size())) {
+        SSL_WrapperPacket wrapperPacket;
+
+        if (wrapperPacket.ParseFromArray(datagram.data().constData(), datagram.data().size())) {
+            if (wrapperPacket.has_detection()) {
+                // Get frame object
+                SSL_DetectionFrame visionFrame = wrapperPacket.detection();
+
+                // Send detected ball
+                if (visionFrame.balls_size()) {
+                    SSL_DetectionBall ball = visionFrame.balls(0);
+
+                    emit sendBallDetection(ball);
+                }
+
+                // Send blue robots
+                for (int i = 0; i < visionFrame.robots_blue_size(); i++) {
+                    SSL_DetectionRobot blueRobot = visionFrame.robots_blue(i);
+
+                    emit sendRobotDetection(RobotDetectionPacket(true, blueRobot));
+                }
+
+                // Send yellow robots
+                for (int i = 0; i < visionFrame.robots_yellow_size(); i++) {
+                    SSL_DetectionRobot yellowRobot = visionFrame.robots_yellow(i);
+
+                    emit sendRobotDetection(RobotDetectionPacket(false, yellowRobot));
+                }
+            }
+
+            // Send field geometry
+            if (wrapperPacket.has_geometry()) {
+                SSL_GeometryData fieldGeometry = wrapperPacket.geometry();
+
+                emit sendFieldDetection(fieldGeometry);
+            }
+        } else {
             spdlog::warn("Failed to convert vision datagram");
             continue;
-        }
-
-        // Parse frame data from wrapper
-        if(wrapperData.has_frame()) {
-            // Get frame object
-            fira_message::Frame frame = wrapperData.frame();
-
-            // Send detected ball signal
-            emit sendBallDetection(frame.ball());
-
-            // Send detected blue robots
-            for(int i = 0; i < frame.robots_blue_size(); i++) {
-                // Get robot object
-                fira_message::Robot blueRobot = frame.robots_blue(i);
-
-                // Send detected blue robot signal
-                emit sendRobotDetection(RobotDetectionPacket(true, blueRobot));
-            }
-
-            // Send detected yellow robots
-            for(int i = 0; i < frame.robots_yellow_size(); i++) {
-                // Get robot object
-                fira_message::Robot yellowRobot = frame.robots_yellow(i);
-
-                // Send detected yellow robot signal
-                emit sendRobotDetection(RobotDetectionPacket(false, yellowRobot));
-            }
-        }
-
-        // Parse field data from wrapper
-        if(wrapperData.has_field()) {
-            // Get field object
-            fira_message::Field field = wrapperData.field();
-
-            // Send detected field signal
-            emit sendFieldDetection(field);
         }
     }
 }

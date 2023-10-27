@@ -23,13 +23,13 @@
 #define ACTUATOR_H
 
 #include <QMutex>
-#include <QTimer>
-#include <QObject>
-#include <QUdpSocket>
 #include <QNetworkDatagram>
 #include <QNetworkInterface>
+#include <QObject>
+#include <QTimer>
+#include <QUdpSocket>
 
-#include <include/proto/packet.pb.h>
+#include <include/proto/ssl_simulation_robot_control.pb.h>
 
 #include <src/utils/types/robotcontrolpacket/robotcontrolpacket.h>
 
@@ -49,7 +49,7 @@ public:
      * \note The address will be taken from the Vision module, so the network connection will be
      * made later.
      */
-    Actuator(const quint16& simPort = 20011);
+    Actuator(const quint16 &simBluePort = 10301, const quint16 &simYellowPort = 10302);
 
     /*!
      * \brief Actuator class destructor.
@@ -59,10 +59,12 @@ public:
 private:
     // Internal network address variables
     QString _simHostAddress;
-    quint16 _simPort;
+    quint16 _simBluePort;
+    quint16 _simYellowPort;
 
     // Socket implementation to send data
-    QUdpSocket *_actuatorSocket;
+    QUdpSocket *_actuatorBlueSocket;
+    QUdpSocket *_actuatorYellowSocket;
 
     // QTimer implementation for sync
     QTimer *_actuatorTimer;

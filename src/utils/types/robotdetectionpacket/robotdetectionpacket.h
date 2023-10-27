@@ -23,7 +23,7 @@
 #ifndef ROBOTDETECTIONPACKET_H
 #define ROBOTDETECTIONPACKET_H
 
-#include <include/proto/packet.pb.h>
+#include <include/proto/ssl_vision_wrapper.pb.h>
 
 /*!
  * \brief The RobotDetectionPacket class provides an interface to enhance fira_message::Robot packet
@@ -37,7 +37,7 @@ public:
      * \param isTeamBlue True if the detection packet is from team blue and False otherwise.
      * \param robotDetectionPacket The robot detection packet itself (from Vision server).
      */
-    RobotDetectionPacket(const bool& isTeamBlue, const fira_message::Robot& robotDetectionPacket);
+    RobotDetectionPacket(const bool &isTeamBlue, const SSL_DetectionRobot &robotDetectionPacket);
 
     /*!
      * \return True if the robot detection packet is from team blue and False otherwise.
@@ -47,12 +47,12 @@ public:
     /*!
      * \return The robot detection packet associated with this class.
      */
-    fira_message::Robot getRobotDetectionPacket() const;
+    SSL_DetectionRobot getRobotDetectionPacket() const;
 
 private:
     // Internal vars
     bool _isTeamBlue;
-    fira_message::Robot _robotDetectionPacket;
+    SSL_DetectionRobot _robotDetectionPacket;
 };
 
 #endif // ROBOTDETECTIONPACKET_H

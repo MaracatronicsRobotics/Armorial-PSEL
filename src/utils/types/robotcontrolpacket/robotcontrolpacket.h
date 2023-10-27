@@ -38,11 +38,19 @@ public:
      * a robot.
      * \param isTeamBlue True if the control packet is sent to the blue team and False otherwise.
      * \param playerId The player id which this packet is aimed for.
-     * \param wheelLeft The wheel left speed (rad/s).
-     * \param wheelRight The wheel right speed (rad/s).
+     * \param wheelFrontLeft The wheel left speed (rad/s).
+     * \param wheelBottomLeft The wheel left speed (rad/s).
+     * \param wheelBottomRight The wheel left speed (rad/s).
+     * \param wheelFrontRight The wheel right speed (rad/s).
      */
-    RobotControlPacket(const bool& isTeamBlue, const quint8& playerId,
-                       const float& wheelLeft, const float& wheelRight);
+    RobotControlPacket(const bool &isTeamBlue,
+                       const quint8 &playerId,
+                       const float &forward,
+                       const float &left,
+                       const float &angular,
+                       const float &kickSpeed,
+                       const float &chipKick,
+                       const float &dribblerSpeed);
 
     /*!
      * \return True if the control packet is aimed to team blue and False otherwise.
@@ -55,21 +63,60 @@ public:
     quint8 getPlayerId() const;
 
     /*!
-     * \return The wheel left speed (rad/s) that was set in this command.
+     * \return The speed towards to front direction that was set in this command.
      */
-    float getWheelLeft() const;
+    float forwardSpeed() const;
 
     /*!
-     * \return The wheel right speed (rad/s) that was set in this command.
+     * \return The speed towards to left direction that was set in this command.
      */
-    float getWheelRight() const;
+    float leftSpeed() const;
+
+    /*!
+     * \return The angular speed that was set in this command.
+     */
+    float angularSpeed() const;
+
+    /*!
+     * \return The kick speed that was set in this command.
+     */
+    float kickSpeed() const;
+
+    /*!
+     * \return The chip kick angle that was set in this command.
+     */
+    float chipKick() const;
+
+    /*!
+     * \return The dribbler speed that was set in this command.
+     */
+    float dribblerSpeed() const;
+
+    /*!
+     * \brief Setters: Sets singular info only
+     */
+    void setForwardSpeed(float speed) { _forward = speed; }
+
+    void setLeftSpeed(float speed) { _left = speed; }
+
+    void setAngularSpeed(float speed) { _angular = speed; }
+
+    void setKickSpeed(float speed) { _kickSpeed = speed; }
+
+    void setChipKickAngle(float angle) { _chipKick = angle; }
+
+    void setDribblerSpeed(float speed) { _dribblerSpeed = speed; }
 
 private:
     // Internal vars
     bool _isTeamBlue;
     quint8 _playerId;
-    float _wheelLeft;
-    float _wheelRight;
+    float _forward;
+    float _left;
+    float _angular;
+    float _kickSpeed;
+    float _chipKick;
+    float _dribblerSpeed;
 };
 
 #endif // ROBOTCONTROLPACKET_H

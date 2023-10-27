@@ -22,9 +22,22 @@
 
 #include "robotcontrolpacket.h"
 
-RobotControlPacket::RobotControlPacket(const bool& isTeamBlue, const quint8& playerId,
-                                       const float& wheelLeft, const float& wheelRight)
-    : _isTeamBlue(isTeamBlue), _playerId(playerId), _wheelLeft(wheelLeft), _wheelRight(wheelRight)
+RobotControlPacket::RobotControlPacket(const bool &isTeamBlue,
+                                       const quint8 &playerId,
+                                       const float &forward,
+                                       const float &left,
+                                       const float &angular,
+                                       const float &kickSpeed,
+                                       const float &chipKick,
+                                       const float &dribblerSpeed)
+    : _isTeamBlue(isTeamBlue)
+    , _playerId(playerId)
+    , _forward(forward)
+    , _left(left)
+    , _angular(angular)
+    , _kickSpeed(kickSpeed)
+    , _chipKick(chipKick)
+    , _dribblerSpeed(dribblerSpeed)
 {
 
 }
@@ -37,10 +50,32 @@ quint8 RobotControlPacket::getPlayerId() const {
     return _playerId;
 }
 
-float RobotControlPacket::getWheelLeft() const {
-    return _wheelLeft;
+float RobotControlPacket::forwardSpeed() const
+{
+    return _forward;
 }
 
-float RobotControlPacket::getWheelRight() const  {
-    return _wheelRight;
+float RobotControlPacket::leftSpeed() const
+{
+    return _left;
+}
+
+float RobotControlPacket::angularSpeed() const
+{
+    return _angular;
+}
+
+float RobotControlPacket::kickSpeed() const
+{
+    return _kickSpeed;
+}
+
+float RobotControlPacket::chipKick() const
+{
+    return _chipKick;
+}
+
+float RobotControlPacket::dribblerSpeed() const
+{
+    return _dribblerSpeed;
 }

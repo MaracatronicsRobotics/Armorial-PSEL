@@ -17,6 +17,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 LIBS += -lQt5Core -lprotobuf -lfmt
 
 system(echo "Generating simulation proto headers" && cd include/proto/simulation && protoc --cpp_out=../ *.proto && cd ../../..)
+system(echo "Generating referee proto headers" && cd include/proto/referee && protoc --cpp_out=../ *.proto && cd ../../..)
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
@@ -36,6 +37,10 @@ SOURCES += \
         include/proto/common.pb.cc \
         include/proto/packet.pb.cc \
         include/proto/replacement.pb.cc \
+        include/proto/ssl_simulation_robot_control.pb.cc \
+        include/proto/ssl_vision_detection.pb.cc \
+        include/proto/ssl_vision_geometry.pb.cc \
+        include/proto/ssl_vision_wrapper.pb.cc \
         main.cpp \
         src/entities/actuator/actuator.cpp \
         src/entities/coach/coach.cpp \
@@ -56,6 +61,10 @@ HEADERS += \
     include/proto/common.pb.h \
     include/proto/packet.pb.h \
     include/proto/replacement.pb.h \
+    include/proto/ssl_simulation_robot_control.pb.h \
+    include/proto/ssl_vision_detection.pb.h \
+    include/proto/ssl_vision_geometry.pb.h \
+    include/proto/ssl_vision_wrapper.pb.h \
     src/entities/actuator/actuator.h \
     src/entities/coach/coach.h \
     src/entities/player/player.h \
